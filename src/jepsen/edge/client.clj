@@ -1,8 +1,11 @@
 (ns jepsen.edge.client
   "Client for edge."
   (:refer-clojure :exclude [read])
-  (:require [jepsen.control :as c]))
-  
+  (:require
+   [clojure.tools.logging :refer :all]
+   [jepsen.control :as c]
+   [clojure.java.shell :as shell]))
+
 ;; (def signer {:private-key "6acc43ba21cfff332106a9318e9ed08c11e7222273419c2c728dbe1d1a9aa032",
 ;;              :address "0xCB7038f9Bd7762a46bBb2A5208B6644e1945cb52"})
 
@@ -22,26 +25,22 @@
 (defn default-send-tx!
   "Parameterless send tx"
   [node]
-  (def command (str
-                "npm run start -- sendtx "
-                (node-url node) " "
-                sender-private-key " "
-                recipient-address " "
-                "--value 10 "
-                "--gas 21000 "
-                "--nonce 0"))
-  (-> (c/exec :echo (str "<default-send-tx> Executing command: " command))
-      (c/cd web3-path (c/exec command))))
+  (->
+   (let [result (:out (shell/sh
+                       "npm" "run" "start" "--" "sendtx"
+                       (node-url node) sender-private-key recipient-address
+                       "--value" "10"
+                       "--gas" "21000"
+                       "--nonce" "0"
+                       :dir web3-path))]
+     (info (str "<default-send-tx> Result: " result)))))
 
 (defn default-get-balance
   "Parameterless get balance"
   [node]
-  (def command (str
-                "npm run start -- balance "
-                (node-url node) " "
-                sender-private-key " "
-                recipient-address))
-  (-> (c/exec :echo (str "<default-get-balance> Executing command: " command))
-      (c/cd web3-path (c/exec command))))
-  
-   
+  (->
+   (let [result (:out (shell/sh
+                       "npm" "run" "start" "--" "balance"
+                       (node-url node) recipient-address
+                       :dir web3-path))]
+     (info (str "<default-get-balance> Result: " result)))))

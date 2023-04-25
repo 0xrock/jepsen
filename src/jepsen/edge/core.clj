@@ -38,16 +38,18 @@
           crash (if (= (:f op) :get_balance)
                   :fail
                   :info)]
-      (try+
-       (case (:f op)
-         :get_balance  (assoc op
-                              :type :ok
-                              :value (independent/tuple k (ec/default-get-balance node)))
-         :send_transaction (do (ec/default-send-tx! node)
-                               (assoc op :type :ok)))
+      (case (:f op)
+        :get_balance  (assoc op
+                             :type :ok
+                             :value (independent/tuple k (ec/default-get-balance node)))
+        :send_transaction (do (ec/default-send-tx! node)
+                              (assoc op :type :ok)))
+      ;; (try+
 
-       (catch [] e
-         (assoc op :type :fail)))))
+
+      ;;  (catch [] e
+      ;;    (assoc op :type :fail)))
+      ))
 
   (teardown! [_ test])
 
